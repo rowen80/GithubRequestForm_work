@@ -222,7 +222,7 @@
     </div>
 
     <!-- ========= HERO IMAGE ========= -->
-    <img src="/static/image.jpg" alt="Ryan Owen Photography" class="hero-image" />
+    <img src="https://githubrequestform.onrender.com/static/image.jpg" alt="Ryan Owen Photography" class="hero-image" />
 
     <!-- ========= FORM VIEW (MAIN CONTENT) ========= -->
     <div id="form-container">
@@ -683,6 +683,9 @@
 
   <!-- ========= FRONT-END LOGIC ========= -->
   <script>
+
+    const API_BASE = "https://githubrequestform.onrender.com";
+
     // ----- Element references -----
     const form = document.getElementById("booking-form");
     const messageEl = document.getElementById("message");
@@ -864,7 +867,7 @@
     async function loadProfileAndPrefill() {
       if (!accessToken) return;
       try {
-        const resp = await fetch("/me", {
+        const resp = await fetch(API_BASE + "/me", {
           method: "GET",
           headers: { "Authorization": "Bearer " + accessToken }
         });
@@ -918,7 +921,7 @@
         return;
       }
       try {
-        const resp = await fetch("/me", {
+        const resp = await fetch(API_BASE + "/me", {
           method: "GET",
           headers: { "Authorization": "Bearer " + accessToken }
         });
@@ -950,7 +953,7 @@
       }
 
       try {
-        const resp = await fetch("/my-jobs", {
+        const resp = await fetch(API_BASE + "/my-jobs", {
           method: "GET",
           headers: {
             "Authorization": "Bearer " + accessToken
@@ -1084,7 +1087,7 @@
         };
 
         try {
-          const resp = await fetch("/jobs", {
+          const resp = await fetch(API_BASE + "/jobs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -1155,7 +1158,7 @@
         const password = document.getElementById("login_password").value;
 
         try {
-          const resp = await fetch("/auth/login", {
+          const resp = await fetch(API_BASE + "/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
@@ -1214,7 +1217,7 @@
         }
 
         try {
-          const resp = await fetch("/auth/forgot-password", {
+          const resp = await fetch(API_BASE + "/auth/forgot-password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })
@@ -1257,7 +1260,7 @@
         const agency = document.getElementById("reg_agency").value || null;
 
         try {
-          const resp = await fetch("/auth/register", {
+          const resp = await fetch(API_BASE + "/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1335,7 +1338,7 @@
         btn.textContent = "Updating...";
 
         try {
-          const resp = await fetch("/auth/change-password", {
+          const resp = await fetch(API_BASE + "/auth/change-password", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1398,7 +1401,7 @@
         };
 
         try {
-          const resp = await fetch("/me", {
+          const resp = await fetch(API_BASE + "/me", {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
