@@ -1,0 +1,88 @@
+from datetime import datetime
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    Float,
+    Date,
+    DateTime,
+    ForeignKey,
+)
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from datetime import datetime
+from sqlalchemy import DateTime
+
+
+# We keep the DB file (crm.db) in the same ROM_DATA folder.
+DATABASE_URL = "sqlite:///crm.db"
+
+engine = create_engine(DATABASE_URL, echo=False)
+SessionLocal = sessionmaker(bind=engine)
+
+Base = declarative_base()
+
+
+class Customer(Base):
+    __tablename__ = "customers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    email = Column(String, nullable=True, index=True)
+    phone = Column(String, nullable=True, index=True)
+    company = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # NEW:
+    password_hash = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    jobs = relationship("Job", back_populates="customer")
+    invoice_items = relationship("InvoiceItem", back_populates="customer")
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+
+    invoice_number = Column(String, nullable=True)
+    job_date = Column(Date, nullable=True)
+
+    service_raw = Column(String, nullable=True)
+    bedrooms_raw = Column(String, nullable=True)
+    price_range_raw = Column(String, nullable=True)
+    sq_ft_raw = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    city = Column(String, nullable=True)
+    sale_type = Column(String, nullable=True)
+    source = Column(String, nullable=True)
+
+    # NEW: full raw form payload from the app as JSON
+    form_data_json = Column(String, nullable=True)
+
+    customer = relationship("Customer", back_populates="jobs")
+
+
+class InvoiceItem(Base):
+    __tablename__ = "invoice_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+
+    invoice_number = Column(String, nullable=True, index=True)
+    invoice_date = Column(Date, nullable=True)
+    service = Column(String, nullable=True)
+    units = Column(Float, nullable=True)
+    price_per_unit = Column(Float, nullable=True)
+    line_total = Column(Float, nullable=True)
+    source = Column(String, nullable=True)
+
+    customer = relationship("Customer", back_populates="invoice_items")
+
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
