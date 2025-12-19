@@ -14,7 +14,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+
 from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import field_validator
+
 
 from models import SessionLocal, Customer, Job
 
@@ -72,7 +75,11 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["argon2"],
+    deprecated="auto",
+)
+
 
 
 # ------------------------------------------------------------
@@ -182,6 +189,16 @@ class UserRegister(BaseModel):
     password: str
     phone: Optional[str] = None
     agency: Optional[str] = None  # maps to Customer.company
+
+    @field_validator("password")
+    @classmethod
+    def password_length(cls, v: str):
+        # protect against bcrypt-style limits and abuse
+        if len(v.encode("utf-8")) > 256:
+            raise ValueError("Password is too long.")
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters.")
+        return v
 
 
 class UserLogin(BaseModel):
