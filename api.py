@@ -728,12 +728,16 @@ def forgot_password(req: ForgotPasswordRequest):
     try:
         customer = get_customer_by_email(db, req.email)
         if customer and customer.email:
-            temp_password = secrets.token_urlsafe(8)
-            customer.password_hash = get_password_hash(temp_password)
-            db.commit()
-            send_password_reset_email_via_zapier(customer.email, temp_password)
+    # prevent duplicate sends
+        if customer.updated_at and (datetime.utcnow() - customer.updated_at).seconds < 30:
+            return {"message": "If that email exists, a reset email will be sent shortly."}
 
-        return {"message": "If that email exists, a reset email will be sent shortly."}
+        temp_password = secrets.token_urlsafe(8)
+        customer.password_hash = get_password_hash(temp_password)
+        customer.updated_at = datetime.utcnow()
+        db.commit()
+        send_password_reset_email_via_zapier(customer.email, temp_password)
+
     finally:
         db.close()
 
