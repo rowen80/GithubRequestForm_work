@@ -15,7 +15,14 @@ from sqlalchemy import DateTime
 
 
 # We keep the DB file (crm.db) in the same ROM_DATA folder.
-DATABASE_URL = "sqlite:///crm.db"
+import os
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./crm.db")
+
+# Render sometimes provides postgres://...; SQLAlchemy expects postgresql://...
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(bind=engine)
