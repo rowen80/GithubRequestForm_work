@@ -510,12 +510,19 @@ def authenticate_customer(db, email: str, password: str) -> Optional[Customer]:
     return customer
 
 
-async def get_current_customer(token: str = Depends(oauth2_scheme)) -> Customer:
+async def get_current_customer(
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+) -> Customer:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials.",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+      # If no Authorization header token, fall back to cookie token (browser login)
+    if not token:
+        token = request.cookies.get("access_token") or ""
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
