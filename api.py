@@ -517,27 +517,6 @@ async def get_current_customer(token: str = Depends(oauth2_scheme)) -> Customer:
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-ADMIN_EMAILS = set(
-    e.strip().lower()
-    for e in os.getenv(
-        "ADMIN_EMAILS",
-        "ryan@ryanowenphotography.com"
-    ).split(",")
-    if e.strip()
-)
-
-async def require_admin(
-    current_customer: Customer = Depends(get_current_customer)
-) -> Customer:
-    email = (current_customer.email or "").strip().lower()
-    if email not in ADMIN_EMAILS:
-        raise HTTPException(
-            status_code=403,
-            detail="Admin access only"
-        )
-    return current_customer
-
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub = payload.get("sub")
@@ -555,6 +534,20 @@ async def require_admin(
         return customer
     finally:
         db.close()
+
+
+ADMIN_EMAILS = set(
+    e.strip().lower()
+    for e in os.getenv("ADMIN_EMAILS", "ryan@ryanowenphotography.com").split(",")
+    if e.strip()
+)
+
+async def require_admin(current_customer: Customer = Depends(get_current_customer)) -> Customer:
+    email = (current_customer.email or "").strip().lower()
+    if email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access only")
+    return current_customer
+
 
 
 # ------------------------------------------------------------
@@ -863,3 +856,137 @@ async def my_jobs(current_customer: Customer = Depends(get_current_customer)):
         return jobs
     finally:
         db.close()
+
+# ------------------------------------------------------------
+# Admin: Customers (HTML)
+# ------------------------------------------------------------
+
+def _admin_page(title: str, body_html: str) -> str:
+    return f"""<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <style>
+      body {{ font-family: Arial, sans-serif; margin: 24px; }}
+      table {{ border-collapse: collapse; width: 100%; }}
+      th, td {{ border-bottom: 1px solid #eee; padding: 8px; text-align: left; }}
+      th {{ font-size: 12px; color: #444; text-transform: uppercase; letter-spacing: .04em; }}
+      input {{ padding: 8px; width: 360px; }}
+      .btn {{ padding: 8px 10px; }}
+      .top {{ margin-bottom: 14px; }}
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <a href="/admin/customers">Admin Customers</a>
+    </div>
+    {body_html}
+  </body>
+</html>"""
+
+
+@app.get("/admin/customers", response_class=HTMLResponse)
+async def admin_customers(q: str = "", current_admin: Customer = Depends(require_admin)):
+    db = SessionLocal()
+    try:
+        query = db.query(Customer)
+        q_clean = (q or "").strip()
+        if q_clean:
+            like = f"%{q_clean}%"
+            filters = []
+            if q_clean.isdigit():
+                filters.append(Customer.id == int(q_clean))
+            filters += [
+                Customer.first_name.ilike(like),
+                Customer.last_name.ilike(like),
+                Customer.email.ilike(like),
+                Customer.phone.ilike(like),
+                Customer.company.ilike(like),
+            ]
+            query = query.filter(or_(*filters))
+
+        customers = query.order_by(Customer.id.desc()).limit(200).all()
+
+        rows = "".join(
+            f"<tr>"
+            f"<td><a href='/admin/customers/{c.id}'>{c.id}</a></td>"
+            f"<td>{c.first_name or ''}</td>"
+            f"<td>{c.last_name or ''}</td>"
+            f"<td>{c.email or ''}</td>"
+            f"<td>{c.phone or ''}</td>"
+            f"<td>{c.company or ''}</td>"
+            f"</tr>"
+            for c in customers
+        )
+
+        body = f"""
+          <h1>Customers</h1>
+          <form method="get" action="/admin/customers" style="margin: 12px 0;">
+            <input name="q" value="{q_clean}" placeholder="id, name, email, phone, company" />
+            <button class="btn" type="submit">Search</button>
+            <a href="/admin/customers">Clear</a>
+          </form>
+          <table>
+            <tr><th>ID</th><th>First</th><th>Last</th><th>Email</th><th>Phone</th><th>Company</th></tr>
+            {rows or "<tr><td colspan='6'>No matches</td></tr>"}
+          </table>
+        """
+        return HTMLResponse(_admin_page("Admin Customers", body))
+    finally:
+        db.close()
+
+
+@app.get("/admin/customers/{customer_id}", response_class=HTMLResponse)
+async def admin_customer_detail(customer_id: int, current_admin: Customer = Depends(require_admin)):
+    db = SessionLocal()
+    try:
+        customer = db.query(Customer).get(customer_id)
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        body = f"""
+          <h1>Customer #{customer.id}</h1>
+          <form method="post" action="/admin/customers/{customer.id}">
+            <div>First: <input name="first_name" value="{customer.first_name or ''}" /></div><br/>
+            <div>Last: <input name="last_name" value="{customer.last_name or ''}" /></div><br/>
+            <div>Email: <input name="email" value="{customer.email or ''}" /></div><br/>
+            <div>Phone: <input name="phone" value="{customer.phone or ''}" /></div><br/>
+            <div>Company: <input name="company" value="{customer.company or ''}" /></div><br/>
+            <button type="submit">Save</button>
+            <a href="/admin/customers">Back</a>
+          </form>
+        """
+        return HTMLResponse(_admin_page(f"Customer {customer.id}", body))
+    finally:
+        db.close()
+
+
+@app.post("/admin/customers/{customer_id}")
+async def admin_customer_save(
+    customer_id: int,
+    first_name: str = Form(""),
+    last_name: str = Form(""),
+    email: str = Form(""),
+    phone: str = Form(""),
+    company: str = Form(""),
+    current_admin: Customer = Depends(require_admin),
+):
+    db = SessionLocal()
+    try:
+        customer = db.query(Customer).get(customer_id)
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        customer.first_name = clean_text(first_name)
+        customer.last_name = clean_text(last_name)
+        customer.email = clean_text(email)
+        customer.phone = normalize_phone(phone)
+        customer.company = clean_text(company)
+
+        db.commit()
+        return RedirectResponse(url=f"/admin/customers/{customer.id}", status_code=303)
+    finally:
+        db.close()
+
