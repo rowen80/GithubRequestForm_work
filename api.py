@@ -671,9 +671,6 @@ def merge_customers(req: CustomerMergeRequest, request: Request):
             add_alias("name", src_name)
 
 
-        # Mark source as merged (non-destructive)
-        source.notes = _append_unique_note(source.notes, f"MERGED_INTO: {target_id}")
-
         db.commit()
 
         return {
