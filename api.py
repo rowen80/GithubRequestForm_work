@@ -520,7 +520,10 @@ async def get_current_customer(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-      # If no Authorization header token, fall back to cookie token (browser login)
+    print("COOKIES:", request.cookies)
+
+
+    # If no Authorization header token, fall back to cookie token (browser login)
     if not token:
         token = request.cookies.get("access_token") or ""
 
