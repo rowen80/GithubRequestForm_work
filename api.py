@@ -20,7 +20,7 @@ from pydantic import field_validator
 
 
 from models import SessionLocal, Customer, Job
-from models import Customer, Job, InvoiceItem, CustomerAlias
+from models import Customer, Job, InvoiceItem
 from models import init_db
 from models import engine
 
@@ -639,23 +639,17 @@ def merge_customers(req: CustomerMergeRequest, request: Request):
             {InvoiceItem.customer_id: target_id}, synchronize_session=False
         )
 
-        # ---- Preserve identity info as aliases (no overwrite of primary) ----
-        def add_alias(alias_type: str, alias_value: str):
-            v = (alias_value or "").strip()
-            if not v:
-                return
-            exists = db.query(CustomerAlias).filter(
-                CustomerAlias.customer_id == target_id,
-                CustomerAlias.alias_type == alias_type,
-                CustomerAlias.alias_value == v,
-            ).first()
-            if not exists:
-                db.add(CustomerAlias(
-                    customer_id=target_id,
-                    source_customer_id=source_id,
-                    alias_type=alias_type,
-                    alias_value=v
-                ))
+        # ---- Preserve identity info in customers table (no extra tables) ----
+        def append_unique(existing: str, value: str) -> str:
+            existing = (existing or "").strip()
+            value = (value or "").strip()
+            if not value:
+                return existing
+            parts = [p.strip() for p in existing.split(",") if p.strip()] if existing else []
+            if value.lower() in [p.lower() for p in parts]:
+                return existing
+            parts.append(value)
+            return ", ".join(parts)
 
         # Fill blanks on target from source (safe)
         if not (target.first_name or "").strip() and (source.first_name or "").strip():
@@ -665,19 +659,20 @@ def merge_customers(req: CustomerMergeRequest, request: Request):
         if not (target.company or "").strip() and (source.company or "").strip():
             target.company = source.company
 
-        # Save source identity as aliases if different
-        if (source.email or "").strip() and (source.email or "").strip().lower() != (target.email or "").strip().lower():
-            add_alias("email", source.email)
+        # Append source email/phone into target alt_* if different
+        src_email = (source.email or "").strip()
+        tgt_email = (target.email or "").strip()
+        if src_email and src_email.lower() != tgt_email.lower():
+            target.alt_emails = append_unique(target.alt_emails, src_email)
 
         src_phone = (source.phone or "").strip()
         tgt_phone = (target.phone or "").strip()
         if src_phone and normalize_phone(src_phone) != normalize_phone(tgt_phone):
-            add_alias("phone", src_phone)
+            target.alt_phones = append_unique(target.alt_phones, src_phone)
 
-        src_name = f"{(source.first_name or '').strip()} {(source.last_name or '').strip()}".strip()
-        tgt_name = f"{(target.first_name or '').strip()} {(target.last_name or '').strip()}".strip()
-        if src_name and src_name.lower() != tgt_name.lower():
-            add_alias("name", src_name)
+        # Mark source as merged so export hides it
+        source.merged_into_customer_id = target_id
+
 
 
         db.commit()
