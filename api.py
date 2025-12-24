@@ -19,7 +19,7 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 from pydantic import field_validator
 
 
-from models import SessionLocal, Customer, Job
+from models import SessionLocal, Customer, Job, InvoiceItem
 from models import Customer, Job, InvoiceItem
 from models import init_db
 from models import engine
@@ -1123,6 +1123,54 @@ async def admin_customer_save(
 
         db.commit()
         return RedirectResponse(url=f"/admin/customers/{customer.id}", status_code=303)
+    finally:
+        db.close()
+
+# =========================
+# Sheets Sync (X-API-Key)
+# =========================
+
+def require_customer_sync_key(request: Request):
+    expected = os.getenv("CUSTOMER_SYNC_KEY", "").strip()
+    provided = (request.headers.get("X-API-Key") or "").strip()
+    if not expected or provided != expected:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+
+class CustomerUpdateRequest(BaseModel):
+    customer_id: int
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    company: str | None = None
+    company_id: int | None = None
+    alt_emails: str | None = None
+    alt_phones: str | None = None
+
+
+@app.post("/admin/customers/update")
+def update_customer(request: Request, req: CustomerUpdateRequest):
+    require_customer_sync_key(request)
+
+    db = SessionLocal()
+    try:
+        c = db.query(Customer).get(int(req.customer_id))
+        if not c:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        # Allowed edits only (no passwords / ids / merges / jobs / invoices)
+        if req.first_name is not None: c.first_name = req.first_name
+        if req.last_name is not None: c.last_name = req.last_name
+        if req.email is not None: c.email = req.email
+        if req.phone is not None: c.phone = req.phone
+        if req.company is not None: c.company = req.company
+        if req.company_id is not None: c.company_id = req.company_id
+        if req.alt_emails is not None: c.alt_emails = req.alt_emails
+        if req.alt_phones is not None: c.alt_phones = req.alt_phones
+
+        db.commit()
+        return {"status": "ok", "customer_id": c.id}
     finally:
         db.close()
 
