@@ -53,7 +53,6 @@ class Customer(Base):
 
     # NEW:
     password_hash = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
 
     jobs = relationship("Job", back_populates="customer")
     invoice_items = relationship("InvoiceItem", back_populates="customer")
@@ -85,6 +84,10 @@ class Job(Base):
 
     invoice_number = Column(String, nullable=True)
     job_date = Column(Date, nullable=True)
+
+    # Soft-cancel support (no deletes)
+    status = Column(String, nullable=True, default="SCHEDULED")
+    cancelled_at = Column(DateTime, nullable=True)
 
     service_raw = Column(String, nullable=True)
     bedrooms_raw = Column(String, nullable=True)
@@ -128,7 +131,13 @@ def init_db():
             'ALTER TABLE customers ADD COLUMN IF NOT EXISTS merged_into_customer_id INTEGER',
             'ALTER TABLE customers ADD COLUMN IF NOT EXISTS alt_emails VARCHAR',
             'ALTER TABLE customers ADD COLUMN IF NOT EXISTS alt_phones VARCHAR',
+            'ALTER TABLE customers ADD COLUMN IF NOT EXISTS password_hash VARCHAR',
+
+            # jobs (soft cancel)
+            'ALTER TABLE jobs ADD COLUMN IF NOT EXISTS status VARCHAR',
+            'ALTER TABLE jobs ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP',
         ]
+
         with engine.begin() as conn:
             for s in stmts:
                 conn.execute(text(s))
