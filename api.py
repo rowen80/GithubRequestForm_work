@@ -596,6 +596,7 @@ def export_customers(request: Request):
                 "email": c.email,
                 "phone": c.phone,
                 "company": c.company,
+                "has_account": bool(getattr(c, "password_hash", None)),
                 "created_at": c.created_at.isoformat() if getattr(c, "created_at", None) else None,
                 "updated_at": c.updated_at.isoformat() if getattr(c, "updated_at", None) else None,
                 "alt_emails": c.alt_emails,
