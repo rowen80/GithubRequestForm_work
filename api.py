@@ -185,7 +185,7 @@ class JobSummary(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-
+    must_change_password: bool = False
 
 class TokenData(BaseModel):
     customer_id: Optional[int] = None
@@ -866,7 +866,11 @@ def login(user_in: UserLogin):
             )
 
         access_token = create_access_token({"sub": str(customer.id)})
-        return Token(access_token=access_token, token_type="bearer")
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            must_change_password=bool(getattr(customer, "must_change_password", 0)),
+        )
     finally:
         db.close()
 
@@ -883,6 +887,7 @@ def forgot_password(req: ForgotPasswordRequest):
 
             temp_password = secrets.token_urlsafe(8)
             customer.password_hash = get_password_hash(temp_password)
+            customer.must_change_password = 1
             customer.updated_at = datetime.utcnow()
             db.commit()
 
@@ -912,6 +917,7 @@ async def change_password(
             raise HTTPException(status_code=400, detail="Old password is incorrect.")
 
         customer.password_hash = get_password_hash(body.new_password)
+        customer.must_change_password = 0
         db.commit()
 
         return {"status": "ok", "message": "Password updated successfully."}

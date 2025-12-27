@@ -53,6 +53,8 @@ class Customer(Base):
 
     # NEW:
     password_hash = Column(String, nullable=True)
+    must_change_password = Column(Integer, nullable=False, default=0)
+
 
     jobs = relationship("Job", back_populates="customer")
     invoice_items = relationship("InvoiceItem", back_populates="customer")
@@ -132,6 +134,8 @@ def init_db():
             'ALTER TABLE customers ADD COLUMN IF NOT EXISTS alt_emails VARCHAR',
             'ALTER TABLE customers ADD COLUMN IF NOT EXISTS alt_phones VARCHAR',
             'ALTER TABLE customers ADD COLUMN IF NOT EXISTS password_hash VARCHAR',
+            'ALTER TABLE customers ADD COLUMN IF NOT EXISTS must_change_password INTEGER DEFAULT 0',
+
 
             # jobs (soft cancel)
             'ALTER TABLE jobs ADD COLUMN IF NOT EXISTS status VARCHAR',

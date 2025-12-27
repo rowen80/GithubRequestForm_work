@@ -1241,10 +1241,34 @@
           await loadMyJobs();
           await refreshProfile();
 
-          // Close login modal after short delay
-          setTimeout(() => {
-            closeLoginModal();
-          }, 600);
+         // If temp password was used, guide user to Change Password in Profile
+         if (data.must_change_password) {
+           closeLoginModal();
+           openProfileModal();
+
+           // ensure profile data is loaded
+           await loadProfileAndPrefill();
+           await loadMyJobs();
+           await refreshProfile();
+
+           // scroll to change password section and focus old password
+           setTimeout(() => {
+             const cp = document.getElementById("change-password-container");
+             const oldPw = document.getElementById("old_password");
+             if (cp) cp.scrollIntoView({ behavior: "smooth", block: "start" });
+             if (oldPw) oldPw.focus();
+             if (changePasswordMessage) {
+               changePasswordMessage.textContent = "Temporary password detected — please set a new password now.";
+               changePasswordMessage.className = "message error";
+             }
+           }, 150);
+         } else {
+           // Close login modal after short delay (normal login)
+           setTimeout(() => {
+             closeLoginModal();
+           }, 600);
+         }
+
         } catch (err) {
           console.error(err);
           loginMessage.textContent = "Login failed. Please try again.";
