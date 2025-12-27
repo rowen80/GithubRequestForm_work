@@ -612,12 +612,6 @@
         </div>
 
 
-          <a href="#" id="jobs-show-all"
-             style="display:none; margin-top:8px; text-decoration:underline; font-size:13px;">
-            Show all
-          </a>
-        </div>
-
         <!-- Change password -->
         <div id="change-password-container" style="margin-top:20px; text-align:left;">
           <h3>Change password</h3>
@@ -984,6 +978,7 @@
         const servicesText = job.service_raw || "";
         const invoiceText = job.invoice_number ? ` (Invoice #${job.invoice_number})` : "";
 
+        // source removed
         li.textContent = `${dateText} — ${addressText} — ${servicesText}${invoiceText}`;
         jobsList.appendChild(li);
       });
@@ -997,6 +992,37 @@
         return;
       }
 
+      try {
+        // Fetch 6 so we know whether to show "Show all"
+       const resp = await fetch(API_BASE + "/my-jobs?limit=6", {
+          method: "GET",
+          headers: { "Authorization": "Bearer " + accessToken }
+        });
+
+        if (!resp.ok) {
+          console.warn("Failed to load jobs, status:", resp.status);
+          if (jobsContainer) jobsContainer.style.display = "none";
+          if (jobsShowAll) jobsShowAll.style.display = "none";
+          return;
+        }
+
+        const jobs = await resp.json();
+
+        renderJobs(jobs.slice(0, 5));
+
+        if (jobsShowAll) {
+          jobsShowAll.style.display = jobs.length > 5 ? "inline-block" : "none";
+        }
+
+        if (jobsContainer) jobsContainer.style.display = "block";
+      } catch (err) {
+        console.error("Error loading jobs:", err);
+        if (jobsContainer) jobsContainer.style.display = "none";
+        if (jobsShowAll) jobsShowAll.style.display = "none";
+      }
+    }
+
+    // Show all (click handler) — MUST be outside loadMyJobs()
     if (jobsShowAll) {
       jobsShowAll.addEventListener("click", async (e) => {
         e.preventDefault();
@@ -1025,82 +1051,6 @@
       });
     }
 
-
-      try {
-        // Fetch 6 so we know whether to show "Show all"
-        const resp = await fetch(API_BASE + "/my-jobs?limit=6", {
-          method: "GET",
-          headers: { "Authorization": "Bearer " + accessToken }
-        });
-
-        if (!resp.ok) {
-          console.warn("Failed to load jobs, status:", resp.status);
-          if (jobsContainer) jobsContainer.style.display = "none";
-          if (jobsShowAll) jobsShowAll.style.display = "none";
-          return;
-        }
-
-        const jobs = await resp.json();
-
-        renderJobs(jobs.slice(0, 5));
-
-        if (jobsShowAll) {
-          jobsShowAll.style.display = jobs.length > 5 ? "inline-block" : "none";
-        }
-
-        cachedAllJobs = null;
-        if (jobsContainer) jobsContainer.style.display = "block";
-      } catch (err) {
-        console.error("Error loading jobs:", err);
-        if (jobsContainer) jobsContainer.style.display = "none";
-        if (jobsShowAll) jobsShowAll.style.display = "none";
-      }
-    }
-
-      try {
-        const resp = await fetch(API_BASE + "/my-jobs", {
-          method: "GET",
-          headers: {
-            "Authorization": "Bearer " + accessToken
-          }
-        });
-
-        if (!resp.ok) {
-          console.warn("Failed to load jobs, status:", resp.status);
-          if (resp.status === 401) {
-            accessToken = null;
-            window.localStorage.removeItem("rom_token");
-            updateTopBarForAuth();
-          }
-          if (jobsContainer) jobsContainer.style.display = "none";
-          return;
-        }
-
-        const jobs = await resp.json();
-        jobsList.innerHTML = "";
-
-        if (!jobs.length) {
-          const li = document.createElement("li");
-          li.textContent = "No jobs found yet.";
-          jobsList.appendChild(li);
-        } else {
-          jobs.forEach(job => {
-            const li = document.createElement("li");
-            const dateText = job.job_date || "Date TBD";
-            const addressText = [job.address, job.city].filter(Boolean).join(", ");
-            const servicesText = job.service_raw || "";
-            const invoiceText = job.invoice_number ? ` (Invoice #${job.invoice_number})` : "";
-            li.textContent = `${dateText} — ${addressText} — ${servicesText}${invoiceText}`;
-            jobsList.appendChild(li);
-          });
-        }
-
-        if (jobsContainer) jobsContainer.style.display = "block";
-      } catch (err) {
-        console.error("Error loading jobs:", err);
-        if (jobsContainer) jobsContainer.style.display = "none";
-      }
-    }
 
     // ----- Booking form submit -----
     if (form) {
