@@ -976,23 +976,40 @@ async def update_me(
 
 
 @app.get("/my-jobs", response_model=List[JobSummary])
-async def my_jobs(current_customer: Customer = Depends(get_current_customer)):
+async def my_jobs(
+    limit: int = 20,
+    current_customer: Customer = Depends(get_current_customer),
+):
     """
     Return recent jobs for the currently authenticated customer.
     Includes both imported invoice jobs and new app bookings.
+
+    limit:
+      - default 20 (backwards compatible)
+      - 5 = last five
+      - 0 = "all" (capped for safety)
     """
+    # Safety cap so "show all" can't accidentally pull 50k rows later
+    if limit is None:
+        limit = 20
+    if limit < 0:
+        limit = 20
+    if limit == 0:
+        limit = 500  # "all" (practically all), but safe
+    if limit > 500:
+        limit = 500
+
     db = SessionLocal()
     try:
-        jobs = (
+        q = (
             db.query(Job)
             .filter(Job.customer_id == current_customer.id)
             # Hide cancelled jobs from the customer Profile history
             .filter(or_(Job.status.is_(None), Job.status != "CANCELLED"))
             .order_by(Job.job_date.desc().nullslast(), Job.id.desc())
-            .limit(20)
-            .all()
         )
 
+        jobs = q.limit(limit).all()
         return jobs
     finally:
         db.close()

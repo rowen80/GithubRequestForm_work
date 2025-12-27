@@ -135,6 +135,10 @@
       margin-top: 4px;
       text-align: left;
     }
+    #jobs-list li {
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
     .section-spacer {
       margin-top: 2px;
       padding-top: 2px;
@@ -600,6 +604,18 @@
         <div id="jobs-container" style="margin-top:20px; text-align:left;">
           <h3>Your recent jobs</h3>
           <ul id="jobs-list" class="small-note" style="padding-left:18px;"></ul>
+
+          <a href="#" id="jobs-show-all"
+             style="display:none; margin-top:8px; text-decoration:underline; font-size:13px;">
+            Show all
+          </a>
+        </div>
+
+
+          <a href="#" id="jobs-show-all"
+             style="display:none; margin-top:8px; text-decoration:underline; font-size:13px;">
+            Show all
+          </a>
         </div>
 
         <!-- Change password -->
@@ -728,6 +744,8 @@
     // Jobs + change password (inside profile modal)
     const jobsContainer = document.getElementById("jobs-container");
     const jobsList = document.getElementById("jobs-list");
+    const jobsShowAll = document.getElementById("jobs-show-all");
+
     const changePasswordForm = document.getElementById("change-password-form");
     const changePasswordMessage = document.getElementById("change-password-message");
 
@@ -946,11 +964,98 @@
     }
 
     // Load recent jobs
+    let cachedAllJobs = null;
+
+    function renderJobs(jobs) {
+      jobsList.innerHTML = "";
+
+      if (!jobs.length) {
+        const li = document.createElement("li");
+        li.textContent = "No jobs found yet.";
+        jobsList.appendChild(li);
+        return;
+      }
+
+      jobs.forEach(job => {
+        const li = document.createElement("li");
+
+        const dateText = job.job_date || "Date TBD";
+        const addressText = [job.address, job.city].filter(Boolean).join(", ");
+        const servicesText = job.service_raw || "";
+        const invoiceText = job.invoice_number ? ` (Invoice #${job.invoice_number})` : "";
+
+        li.textContent = `${dateText} — ${addressText} — ${servicesText}${invoiceText}`;
+        jobsList.appendChild(li);
+      });
+    }
+
     async function loadMyJobs() {
       if (!accessToken) {
         if (jobsContainer) jobsContainer.style.display = "none";
+        if (jobsShowAll) jobsShowAll.style.display = "none";
+        cachedAllJobs = null;
         return;
       }
+
+    if (jobsShowAll) {
+      jobsShowAll.addEventListener("click", async (e) => {
+        e.preventDefault();
+        if (!accessToken) return;
+
+        try {
+          if (!cachedAllJobs) {
+            const resp = await fetch(API_BASE + "/my-jobs?limit=0", {
+              method: "GET",
+              headers: { "Authorization": "Bearer " + accessToken }
+            });
+
+            if (!resp.ok) {
+              console.warn("Failed to load all jobs, status:", resp.status);
+              return;
+            }
+
+            cachedAllJobs = await resp.json();
+          }
+
+          renderJobs(cachedAllJobs);
+          jobsShowAll.style.display = "none";
+        } catch (err) {
+          console.error("Error loading all jobs:", err);
+        }
+      });
+    }
+
+
+      try {
+        // Fetch 6 so we know whether to show "Show all"
+        const resp = await fetch(API_BASE + "/my-jobs?limit=6", {
+          method: "GET",
+          headers: { "Authorization": "Bearer " + accessToken }
+        });
+
+        if (!resp.ok) {
+          console.warn("Failed to load jobs, status:", resp.status);
+          if (jobsContainer) jobsContainer.style.display = "none";
+          if (jobsShowAll) jobsShowAll.style.display = "none";
+          return;
+        }
+
+        const jobs = await resp.json();
+
+        renderJobs(jobs.slice(0, 5));
+
+        if (jobsShowAll) {
+          jobsShowAll.style.display = jobs.length > 5 ? "inline-block" : "none";
+        }
+
+        cachedAllJobs = null;
+        if (jobsContainer) jobsContainer.style.display = "block";
+      } catch (err) {
+        console.error("Error loading jobs:", err);
+        if (jobsContainer) jobsContainer.style.display = "none";
+        if (jobsShowAll) jobsShowAll.style.display = "none";
+      }
+    }
 
       try {
         const resp = await fetch(API_BASE + "/my-jobs", {
@@ -985,8 +1090,7 @@
             const addressText = [job.address, job.city].filter(Boolean).join(", ");
             const servicesText = job.service_raw || "";
             const invoiceText = job.invoice_number ? ` (Invoice #${job.invoice_number})` : "";
-            const sourceText = job.source ? ` [${job.source}]` : "";
-            li.textContent = `${dateText} — ${addressText} — ${servicesText}${invoiceText}${sourceText}`;
+            li.textContent = `${dateText} — ${addressText} — ${servicesText}${invoiceText}`;
             jobsList.appendChild(li);
           });
         }
