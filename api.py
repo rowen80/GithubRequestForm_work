@@ -1199,21 +1199,18 @@ def export_jobs_sync(request: Request, include_cancelled: int = 0):
         out = []
         for j in jobs:
             out.append({
-                "job_id": j.id,
-                "customer_id": j.customer_id,
-                "invoice_number": j.invoice_number,
-                "job_date": j.job_date.isoformat() if j.job_date else None,
-                "service_raw": j.service_raw,
-                "bedrooms_raw": j.bedrooms_raw,
-                "price_range_raw": j.price_range_raw,
-                "sq_ft_raw": j.sq_ft_raw,
-                "address": j.address,
-                "city": j.city,
-                "sale_type": j.sale_type,
-                "source": j.source,
-                "status": (j.status or "SCHEDULED"),
-                "cancelled_at": (j.cancelled_at.isoformat() if j.cancelled_at else None),
+                "job_id": job.id,
+                "customer_id": cust.id,
+                "first_name": cust.first_name,
+                "last_name": cust.last_name,
+                "company": cust.company,
+                "job_date": job.job_date.isoformat() if job.job_date else None,
+                "address": job.address,
+                "city": job.city,
+                "status": job.status,
+                "cancelled_at": job.cancelled_at.isoformat() if job.cancelled_at else None,
             })
+
 
         return {"count": len(out), "jobs": out}
     finally:
