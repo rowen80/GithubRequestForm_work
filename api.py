@@ -356,7 +356,6 @@ def send_password_reset_email_via_zapier(email: str, temp_password: str):
     }
 
     print("Sending reset webhook:", payload)
-    requests.post(RESET_ZAPIER_WEBHOOK_URL, json=payload, timeout=5)
 
     try:
         resp = requests.post(RESET_ZAPIER_WEBHOOK_URL, json=payload, timeout=10)
@@ -364,6 +363,7 @@ def send_password_reset_email_via_zapier(email: str, temp_password: str):
             print(f"Password reset Zapier webhook returned {resp.status_code}: {resp.text[:200]}")
     except Exception as e:
         print(f"Error calling password reset Zapier webhook: {e}")
+
 
 
 #Pricing Setup-----------------------------
@@ -1129,17 +1129,6 @@ async def admin_customer_save(
         return RedirectResponse(url=f"/admin/customers/{customer.id}", status_code=303)
     finally:
         db.close()
-
-# =========================
-# Sheets Sync (X-API-Key)
-# =========================
-
-def require_customer_sync_key(request: Request):
-    expected = os.getenv("CUSTOMER_SYNC_KEY", "").strip()
-    provided = (request.headers.get("X-API-Key") or "").strip()
-    if not expected or provided != expected:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
 
 class CustomerUpdateRequest(BaseModel):
     customer_id: int
