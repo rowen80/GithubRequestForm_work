@@ -1224,10 +1224,12 @@ def update_job_sync(request: Request, payload: dict):
     require_customer_sync_key(request)
 
     job_id = payload.get("job_id")
-    status = payload.get("status")
+    raw_status = payload.get("status")
 
     if not job_id:
         raise HTTPException(status_code=400, detail="Missing job_id")
+
+    status = str(raw_status or "").strip().upper()
 
     db = SessionLocal()
     try:
@@ -1235,24 +1237,23 @@ def update_job_sync(request: Request, payload: dict):
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
 
-        if status is not None:
-            status = str(status).strip().upper()
-
-            if status == "CANCELLED":
-                job.status = "CANCELLED"
-                job.cancelled_at = datetime.utcnow()
-            else:
-                # anything else (including blank) = active
-                job.status = None
-                job.cancelled_at = None
-
-            else:
-                raise HTTPException(
-                    status_code=422,
-                    detail="Invalid status. Only CANCELLED or blank allowed."
-                )
+        # IDIOT-PROOF RULE:
+        # CANCELLED = cancelled
+        # anything else (including blank) = active
+        if status == "CANCELLED":
+            job.status = "CANCELLED"
+            job.cancelled_at = datetime.utcnow()
+        else:
+            job.status = None
+            job.cancelled_at = None
 
         db.commit()
-        return {"status": "ok", "job_id": job.id}
+
+        return {
+            "status": "ok",
+            "job_id": job.id,
+            "received_status": raw_status,
+            "applied_status": job.status,
+        }
     finally:
         db.close()
