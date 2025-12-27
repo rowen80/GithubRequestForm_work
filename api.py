@@ -1180,21 +1180,23 @@ def update_customer(request: Request, req: CustomerUpdateRequest):
 
 @app.get("/admin/jobs_sync/export")
 def export_jobs_sync(request: Request, include_cancelled: int = 0):
-    """
-    Sheets export for JOBS_HISTORY.
-    Default excludes CANCELLED.
-    """
     require_customer_sync_key(request)
 
     db = SessionLocal()
     try:
-        q = db.query(Job)
+        q = (
+            db.query(Job, Customer)
+            .join(Customer, Customer.id == Job.customer_id)
+        )
 
         if not include_cancelled:
-            # treat NULL status as active (legacy rows)
             q = q.filter(or_(Job.status.is_(None), Job.status != "CANCELLED"))
 
-        jobs = q.order_by(Job.id.desc()).limit(5000).all()
+        rows = (
+            q.order_by(Job.job_date.desc().nullslast(), Job.id.desc())
+            .limit(5000)
+            .all()
+        )
 
         out = []
         for job, cust in rows:
@@ -1210,7 +1212,6 @@ def export_jobs_sync(request: Request, include_cancelled: int = 0):
                 "status": job.status,
                 "cancelled_at": job.cancelled_at.isoformat() if job.cancelled_at else None,
             })
-
 
         return {"count": len(out), "jobs": out}
     finally:
