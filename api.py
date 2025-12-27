@@ -1241,9 +1241,11 @@ def update_job_sync(request: Request, payload: dict):
             if status == "CANCELLED":
                 job.status = "CANCELLED"
                 job.cancelled_at = datetime.utcnow()
-            elif status == "":
-                # blank means "do nothing"
-                pass
+            else:
+                # anything else (including blank) = active
+                job.status = None
+                job.cancelled_at = None
+
             else:
                 raise HTTPException(
                     status_code=422,
