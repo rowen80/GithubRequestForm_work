@@ -226,7 +226,7 @@
     </div>
 
     <!-- ========= HERO IMAGE ========= -->
-    <img src="https://githubrequestform.onrender.com/static/image.jpg" alt="Ryan Owen Photography" class="hero-image" />
+    <img id="hero-image" src="https://githubrequestform.onrender.com/static/image.jpg" alt="Ryan Owen Photography" class="hero-image" />
 
     <!-- ========= FORM VIEW (MAIN CONTENT) ========= -->
     <div id="form-container">
@@ -705,6 +705,10 @@
     const thankyouContainer = document.getElementById("thankyou-container");
     const newRequestBtn = document.getElementById("new-request-btn");
     const previewThankyouBtn = document.getElementById("preview-thankyou-btn");
+    const heroImg = document.getElementById("hero-image");
+    const HERO_SRC = "https://githubrequestform.onrender.com/static/image.jpg";
+    const THANKYOU_SRC = "thankYou.jpg";
+
 
     // Entry overlay
     const entryOverlay = document.getElementById("entry-overlay");
@@ -1163,6 +1167,7 @@
           messageEl.className = "message";
           formContainer.style.display = "none";
           thankyouContainer.style.display = "block";
+          if (heroImg) heroImg.src = THANKYOU_SRC;
           renderEstimate(result.estimate);
           window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (err) {
@@ -1181,6 +1186,7 @@
       newRequestBtn.addEventListener("click", () => {
         thankyouContainer.style.display = "none";
         formContainer.style.display = "block";
+        if (heroImg) heroImg.src = HERO_SRC;
         messageEl.textContent = "";
         messageEl.className = "message";
         form.reset();
@@ -1194,6 +1200,7 @@
       previewThankyouBtn.addEventListener("click", () => {
         formContainer.style.display = "none";
         thankyouContainer.style.display = "block";
+        if (heroImg) heroImg.src = THANKYOU_SRC;
         renderEstimate(null);
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
