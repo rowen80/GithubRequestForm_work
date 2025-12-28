@@ -709,7 +709,7 @@
     const HERO_SRC = "https://githubrequestform.onrender.com/static/image.jpg";
     const THANKYOU_SRC = "/static/thankYou.jpg";
     const HERO_CROP = "50% 50%";      // center
-    const THANKYOU_CROP = "50% 30%";  // shifts focus upward 
+    const THANKYOU_CROP = "50% 65%";  // shifts focus upward 
 
 
 
@@ -1170,7 +1170,10 @@
           messageEl.className = "message";
           formContainer.style.display = "none";
           thankyouContainer.style.display = "block";
-          if (heroImg) heroImg.src = THANKYOU_SRC;
+          if (heroImg) {
+            heroImg.src = THANKYOU_SRC;
+            heroImg.style.objectPosition = THANKYOU_CROP;
+          }
           renderEstimate(result.estimate);
           window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (err) {
@@ -1203,7 +1206,10 @@
       previewThankyouBtn.addEventListener("click", () => {
         formContainer.style.display = "none";
         thankyouContainer.style.display = "block";
-        if (heroImg) heroImg.src = THANKYOU_SRC;
+        if (heroImg) {
+          heroImg.src = THANKYOU_SRC;
+          heroImg.style.objectPosition = THANKYOU_CROP;
+        }
         renderEstimate(null);
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
