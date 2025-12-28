@@ -248,10 +248,6 @@
       <!-- CONTINUE AS GUEST TEXT -->
       <label>Or simply continue as guest and fill out the form below:</label>
 
-      <!-- DEV ONLY: Thank You preview button -->
-      <button type="button" id="preview-thankyou-btn" style="margin-bottom:10px;">
-        Preview Thank You Page
-      </button>
 
       <!-- ========= BOOKING FORM ========= -->
       <form id="booking-form">
@@ -704,7 +700,6 @@
     const formContainer = document.getElementById("form-container");
     const thankyouContainer = document.getElementById("thankyou-container");
     const newRequestBtn = document.getElementById("new-request-btn");
-    const previewThankyouBtn = document.getElementById("preview-thankyou-btn");
     const heroImg = document.getElementById("hero-image");
     const HERO_SRC = "https://githubrequestform.onrender.com/static/image.jpg";
     const THANKYOU_SRC = "/static/thankYou.jpg";
@@ -1201,19 +1196,6 @@
       });
     }
 
-    // Preview Thank You page (dev helper)
-    if (previewThankyouBtn) {
-      previewThankyouBtn.addEventListener("click", () => {
-        formContainer.style.display = "none";
-        thankyouContainer.style.display = "block";
-        if (heroImg) {
-          heroImg.src = THANKYOU_SRC;
-          heroImg.style.objectPosition = THANKYOU_CROP;
-        }
-        renderEstimate(null);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    }
 
     // ----- Login handler -----
     if (loginForm) {
