@@ -1203,6 +1203,7 @@
           }
           renderEstimate(result.estimate);
           scrollToTopSafe();
+          try { window.parent.postMessage({ type: "ROM_SCROLL_TO_FORM_TOP" }, "https://www.ryanowenphotography.com"); } catch (_) {}
         } catch (err) {
           console.error(err);
           messageEl.textContent = "Sorry, something went wrong. Please try again or email Ryan directly.";
@@ -1225,6 +1226,7 @@
         form.reset();
         renderEstimate(null);
         scrollToTopSafe();
+        try { window.parent.postMessage({ type: "ROM_SCROLL_TO_FORM_TOP" }, "https://www.ryanowenphotography.com"); } catch (_) {}
       });
     }
 
