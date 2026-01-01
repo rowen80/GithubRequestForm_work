@@ -12,85 +12,9 @@
       margin: 0;
       padding: 0;
     }
-    
-    /* ========= SITE HEADER (Squarespace-style) ========= */
-    .site-header{
-      width:100%;
-      background:#ffffff;
-      border-bottom:1px solid rgba(0,0,0,0.08);
-    }
-    .header-inner{
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 12px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 16px;
-      position: relative;
-    }
-    .brand{ display:flex; align-items:center; text-decoration:none; }
-    .brand-logo{
-      height: 34px; /* desktop logo height */
-      width: auto;
-      display:block;
-    }
-
-    .site-nav{
-      display:flex;
-      align-items:center;
-      gap: 18px;
-      font-size: 14px;
-      letter-spacing: 0.02em;
-    }
-    .site-nav a{
-      text-decoration:none;
-      color:#111;
-      white-space:nowrap;
-    }
-    .site-nav a:hover{ text-decoration:underline; }
-    .phone-link{ font-weight: 600; }
-
-    .nav-toggle{
-      display:none;
-      background: transparent;
-      border: 1px solid rgba(0,0,0,0.15);
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 18px;
-      line-height: 1;
-      cursor:pointer;
-    }
-
-    /* Mobile: hamburger + dropdown */
-    @media (max-width: 768px){
-      .brand-logo{ height: 28px; } /* smaller logo on mobile */
-
-      .nav-toggle{ display:block; }
-
-      .site-nav{
-        display:none;
-        position:absolute;
-        top: 100%;
-        right: 16px;
-        left: 16px;
-        background:#fff;
-        border: 1px solid rgba(0,0,0,0.12);
-        border-radius: 12px;
-        padding: 10px 12px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.10);
-        z-index: 50;
-      }
-      .site-nav.open{ display:flex; }
-      .site-nav a{ width: 100%; padding: 6px 4px; }
-    }
-
-.wrapper {
+    .wrapper {
       max-width: 700px;
-      margin: 16px auto 24px;
+      margin: 24px auto;
       background: white;
       padding: 24px;
       border-radius: 8px;
@@ -284,27 +208,6 @@
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="https://www.ryanowenphotography.com" aria-label="Ryan Owen Photography Home">
-        <img class="brand-logo" src="/static/ROM_logo.jpg" alt="Ryan Owen Photography">
-      </a>
-
-      <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
-        &#9776;
-      </button>
-
-      <nav id="site-nav" class="site-nav" aria-label="Primary">
-        <a href="https://www.ryanowenphotography.com/ryanowenphotography">Portfolio</a>
-        <a href="https://www.ryanowenphotography.com/about">About</a>
-        <a href="https://www.ryanowenphotography.com/packages2">Packages</a>
-        <a href="https://www.ryanowenphotography.com/stock">Stock</a>
-        <a href="https://www.ryanowenphotography.com/contact">Contact</a>
-        <a class="phone-link" href="tel:+12404018385">240-401-8385</a>
-      </nav>
-    </div>
-  </header>
-
   <div class="wrapper">
 
     <!-- ========= ENTRY GATE ========= -->
@@ -1745,38 +1648,5 @@
       updateTopBarForAuth();
     }
   </script>
-
-<script>
-  // Header hamburger menu (mobile)
-  document.addEventListener('DOMContentLoaded', function () {
-    const toggle = document.querySelector('.nav-toggle');
-    const nav = document.querySelector('.site-nav');
-    if (!toggle || !nav) return;
-
-    function closeNav(){
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-
-    toggle.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const isOpen = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    });
-
-    // Click anywhere outside the nav closes it (within the same page)
-    document.addEventListener('click', function (e) {
-      if (!nav.classList.contains('open')) return;
-      if (nav.contains(e.target) || toggle.contains(e.target)) return;
-      closeNav();
-    });
-
-    // Close after selecting a link (mobile)
-    nav.querySelectorAll('a').forEach(function(a){
-      a.addEventListener('click', closeNav);
-    });
-  });
-</script>
-
 </body>
 </html>
