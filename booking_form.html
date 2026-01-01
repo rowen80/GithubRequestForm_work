@@ -281,6 +281,40 @@
       flex-wrap: wrap;
       gap: 8px;
     }
+
+    /* CSS-only hamburger (Android safe) */
+    .nav-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    .hamburger {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background-color: #000;
+      position: relative;
+    }
+
+    .hamburger::before,
+    .hamburger::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 24px;
+      height: 2px;
+      background-color: #000;
+    }
+
+    .hamburger::before {
+      top: -7px;
+    }
+
+    .hamburger::after {
+      top: 7px;
+    }
   </style>
 </head>
 <body>
@@ -291,8 +325,9 @@
       </a>
 
       <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
-        &#9776;
+        <span class="hamburger"></span>
       </button>
+
 
       <nav id="site-nav" class="site-nav" aria-label="Primary">
         <a href="https://www.ryanowenphotography.com/ryanowenphotography">Portfolio</a>
