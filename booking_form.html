@@ -315,6 +315,66 @@
     .hamburger::after {
       top: 7px;
     }
+
+    /* ========= SERVICE INFO BUTTON + POPOVER ========= */
+    .service-row {
+      position: relative;
+    }
+    .info-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin-left: 5px;
+      background: transparent;
+      color: #666;
+      border: none;
+      border-radius: 0;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    .info-btn:hover {
+      color: #111;
+    }
+    .info-popover {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: calc(100% + 2px);
+      z-index: 200;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      font-size: 0.82rem;
+      font-weight: 400;
+      color: #444;
+      line-height: 1.45;
+      max-width: 300px;
+    }
+    .info-popover.open {
+      display: block;
+    }
+    .info-popover img {
+      width: 100%;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .info-popover p {
+      margin: 0;
+    }
+    @media (max-width: 600px) {
+      .info-popover {
+        position: static;
+        max-width: 100%;
+        margin-top: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      }
+    }
   </style>
 </head>
 <body>
@@ -414,6 +474,7 @@
           <option>Central Reservations</option>
           <option>Debbie Read Team</option>
           <option>Keller Williams</option>
+          <option>LeeAnn Group</option>
           <option>Northrop</option>
           <option>PenFed</option>
           <option>Shore4You</option>
@@ -572,16 +633,38 @@
           Our rates are based on several factors. An estimate will be provided once the form is completed. 
         </div>
         <div class="services-group">
-          <label><input type="checkbox" value="Basic Photos" /> Basic Photos</label>
+          <div class="service-row">
+            <label><input type="checkbox" value="Basic Photos" /> Basic Photos <button type="button" class="info-btn" data-target="info-basic" aria-label="More info about Basic Photos">ⓘ</button></label>
+            <div class="info-popover" id="info-basic">
+              <p>These are HDR blended images similar to what you would find on MLS or rental sites. We utilize natural light with minimal artificial lighting to reduce color casts. These will brighten the interiors and provide full coverage of the property.</p>
+            </div>
+          </div>
+          <div class="service-row">
+            <label><input type="checkbox" value="Catalogue Style Photos (Quality not Quantity)" /> Catalogue Style Photos (Quality not Quantity) <button type="button" class="info-btn" data-target="info-catalogue" aria-label="More info about Catalogue Style Photos">ⓘ</button></label>
+            <div class="info-popover" id="info-catalogue">
+              <img src="https://githubrequestform.onrender.com/static/Tenley34855-49.jpg" alt="Catalogue Style Photo example" />
+              <p>For the best possible photos of your listing we bring the studio to you. Using daylight balanced strobes to recreate natural looking, yet dramatic lighting. This creates true colors and spectral highlights that make your listing "pop". These shoots can take up to 4 hours.</p>
+            </div>
+          </div>
           <label><input type="checkbox" value="Drone Photos" /> Drone Photos</label>
-          <label><input type="checkbox" value="Twilight Photos" /> Twilight Photos</label>
-          <label><input type="checkbox" value="Video" /> Video</label>
+          <div class="service-row">
+            <label><input type="checkbox" value="Twilight Photos" /> Twilight Photos <button type="button" class="info-btn" data-target="info-twilight" aria-label="More info about Twilight Photos">ⓘ</button></label>
+            <div class="info-popover" id="info-twilight">
+              <img src="https://githubrequestform.onrender.com/static/Bay1710twilight.jpg" alt="Twilight Photo example" />
+              <p>Sunset exteriors with enhanced lighting make your listing glow. Typically 5-10 "Hero" shots.</p>
+            </div>
+          </div>
+          <div class="service-row">
+            <label><input type="checkbox" value="Video" /> Video <button type="button" class="info-btn" data-target="info-video" aria-label="More info about Video">ⓘ</button></label>
+            <div class="info-popover" id="info-video">
+              <p>These 60-90 second videos take the viewer on a cultivated walkthrough. Buyers will be floating while we highlight the best features.</p>
+            </div>
+          </div>
           <label><input type="checkbox" value="Instagram Reels (Vertical Video)" /> Instagram Reels (Vertical Video)</label>
           <label><input type="checkbox" value="Community Photos" /> Community Photos</label>
           <label><input type="checkbox" value="Zillow 360 Tour" /> Zillow 360 Tour</label>
           <label><input type="checkbox" value="Zillow Floor Plan" /> Zillow Floor Plan</label>
           <label><input type="checkbox" value="Matterport 360 (Must Have Matterport Account)" /> Matterport 360 (Must Have Matterport Account)</label>
-          <label><input type="checkbox" value="Catalogue Style Photos (Quality not Quantity)" /> Catalogue Style Photos (Quality not Quantity)</label>
         </div>
 
         <!-- Notes -->
@@ -711,6 +794,7 @@
             <option>Central Reservations</option>
             <option>Debbie Read Team</option>
             <option>Keller Williams</option>
+            <option>LeeAnn Group</option>
             <option>Northrop</option>
             <option>PenFed</option>
             <option>Shore4You</option>
@@ -804,6 +888,7 @@
             <option>Central Reservations</option>
             <option>Debbie Read Team</option>
             <option>Keller Williams</option>
+            <option>LeeAnn Group</option>
             <option>Northrop</option>
             <option>PenFed</option>
             <option>Shore4You</option>
@@ -1779,6 +1864,25 @@
     } else {
       updateTopBarForAuth();
     }
+
+    // ----- Service info popovers -----
+    document.querySelectorAll('.info-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var popover = document.getElementById(btn.dataset.target);
+        if (!popover) return;
+        var isOpen = popover.classList.contains('open');
+        document.querySelectorAll('.info-popover.open').forEach(function(p) {
+          p.classList.remove('open');
+        });
+        if (!isOpen) popover.classList.add('open');
+      });
+    });
+    document.addEventListener('click', function() {
+      document.querySelectorAll('.info-popover.open').forEach(function(p) {
+        p.classList.remove('open');
+      });
+    });
   </script>
 
 <script>
