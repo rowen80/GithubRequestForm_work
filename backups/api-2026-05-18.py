@@ -362,8 +362,8 @@ def build_n8n_booking_payload(job_in, customer, job, estimate) -> dict:
         "customer": {
             "firstName": job_in.first_name,
             "lastName": job_in.last_name,
-            "email": job_in.email,
-            "phone": job_in.phone,
+            "email": customer.email,
+            "phone": customer.phone,
             "agency": job_in.agency,
             "isFirstTime": job_in.is_first_time,
         },
